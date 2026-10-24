@@ -1,0 +1,106 @@
+AVDESK · Stimolazione Visiva
+Copyright © 2026 Rossano Fracassa
+Tutti i diritti riservati.
+
+
+LICENZA D'USO E DIRITTI SUL SOFTWARE
+
+1. TITOLARITÀ
+
+AVDESK · Stimolazione Visiva, inclusi a titolo esemplificativo il codice sorgente, il codice JavaScript, HTML, CSS, l'interfaccia grafica, la struttura, la logica di funzionamento, gli algoritmi, i testi, gli elementi grafici e gli altri contenuti originali, è un'opera di cui Rossano Fracassa dichiara la titolarità dei diritti, salvo eventuali componenti di terze parti soggetti alle rispettive licenze.
+
+Copyright © 2026 Rossano Fracassa.
+Tutti i diritti riservati.
+
+
+2. CONCESSIONE D'USO
+
+L'accesso e l'utilizzo di AVDESK attraverso il sito ufficiale sono consentiti all'utente per finalità personali e/o professionali, nei limiti previsti dalla presente licenza.
+
+La presente licenza non trasferisce all'utente alcun diritto di proprietà, titolarità o paternità sul software.
+
+
+3. DIVIETI
+
+Salvo preventiva autorizzazione scritta del titolare dei diritti, è vietato:
+
+- copiare o riprodurre, integralmente o parzialmente, il software o il suo codice sorgente;
+- modificare, adattare, tradurre o creare opere derivate basate sul software;
+- distribuire, redistribuire, pubblicare o rendere disponibile a terzi il software o copie dello stesso;
+- pubblicare online copie, fork, mirror o versioni modificate del software;
+- utilizzare il codice, la struttura o la logica del software per realizzare o distribuire prodotti o servizi derivati;
+- rimuovere, nascondere, alterare o rendere illeggibili le indicazioni di copyright, paternità, titolarità o altri avvisi relativi ai diritti;
+- sostituire o modificare le indicazioni di copyright in modo da attribuire a sé o a terzi la paternità del software originale;
+- presentare, pubblicizzare o distribuire il software originale o una sua versione modificata come opera propria;
+- utilizzare il nome "AVDESK", la denominazione "AVDESK · Stimolazione Visiva" o gli elementi identificativi del progetto in modo tale da creare confusione circa l'autore o il titolare del software.
+
+
+4. COPYRIGHT E ATTRIBUZIONE
+
+Le indicazioni:
+
+"AVDESK · Stimolazione Visiva"
+"Copyright © 2026 Rossano Fracassa"
+"Tutti i diritti riservati"
+
+identificano l'autore e il titolare dei diritti sul progetto originale.
+
+La rimozione o sostituzione di tali indicazioni all'interno di una copia o di una versione modificata non comporta alcun trasferimento della titolarità dei diritti.
+
+Una versione modificata da terzi non può essere presentata come versione originale di AVDESK né come opera originariamente realizzata dal soggetto che ha effettuato la modifica.
+
+
+5. UTILIZZO DELLA VERSIONE PUBBLICATA
+
+L'utente può utilizzare la versione di AVDESK resa pubblicamente disponibile dal titolare attraverso il sito ufficiale, senza acquisire per questo il diritto di appropriarsi del codice sorgente o di distribuirne copie.
+
+Il semplice fatto che il codice HTML, CSS o JavaScript sia tecnicamente accessibile dal browser non costituisce concessione dei diritti di copia, modifica, pubblicazione o redistribuzione.
+
+
+6. VERSIONI MODIFICATE
+
+Qualsiasi modifica, adattamento, trasformazione o versione derivata realizzata senza autorizzazione non è una versione ufficiale di AVDESK.
+
+Il titolare non riconosce come ufficiali copie o versioni modificate da soggetti terzi.
+
+Nessuna versione modificata può utilizzare il copyright originale in modo tale da suggerire che il titolare abbia approvato, realizzato o pubblicato tale versione.
+
+
+7. COMPONENTI DI TERZE PARTI
+
+Eventuali librerie, font, framework, software o altri componenti di terze parti eventualmente inclusi nel progetto rimangono soggetti alle rispettive licenze e ai rispettivi diritti dei loro titolari.
+
+La presente licenza riguarda esclusivamente gli elementi originali di AVDESK di cui Rossano Fracassa detiene i relativi diritti.
+
+
+8. AUTORIZZAZIONI
+
+Eventuali autorizzazioni alla copia, modifica, distribuzione, pubblicazione o utilizzo del codice al di fuori dei limiti previsti dalla presente licenza devono essere concesse preventivamente e in forma scritta dal titolare dei diritti.
+
+L'assenza di una specifica autorizzazione scritta deve intendersi come mancata concessione del relativo diritto.
+
+
+9. VIOLAZIONI
+
+L'utilizzo del software in violazione della presente licenza non costituisce una concessione implicita di diritti.
+
+Il titolare si riserva ogni diritto e ogni azione consentita dalla normativa applicabile in caso di violazione dei propri diritti.
+
+
+10. ASSENZA DI TRASFERIMENTO
+
+La presente licenza non trasferisce alcun diritto di proprietà intellettuale sul software, sul codice sorgente, sul design, sulla struttura, sulla logica o sui contenuti originali di AVDESK.
+
+Tutti i diritti non espressamente concessi rimangono riservati al titolare.
+
+
+11. VERSIONE E DATA
+
+Software: AVDESK · Stimolazione Visiva
+Versione: Web 1.1
+Anno: 2026
+Titolare: Rossano Fracassa
+
+
+© 2026 Rossano Fracassa
+Tutti i diritti riservati.

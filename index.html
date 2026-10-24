@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>AVDESK · Stimolazione Visiva</title>
+<!--
+  AVDESK · Stimolazione Visiva
+  Copyright © 2026 Rossano Fracassa
+  Tutti i diritti riservati.
+
+  Il presente software, il codice sorgente, l'interfaccia,
+  la logica di funzionamento e i contenuti sono protetti
+  dal diritto d'autore.
+  Copia, modifica, riproduzione, distribuzione o
+  redistribuzione non autorizzate sono vietate.
+-->
+
+  <link rel="stylesheet" href="style.css">
+
+
+<!-- Favicon standard per i browser moderni -->
+<link rel="icon" type="image/png" sizes="512x512" href="/favicon.png">
+
+<!-- Icona per dispositivi Apple (iPhone/iPad) quando salvano l'app sulla home -->
+<link rel="apple-touch-icon" sizes="512x512" href="/favicon.png">
+
+
+
+
+</head>
+<body>
+<div id="app">
+
+  <header>
+    <div class="brand">
+      <b>AVDESK · Stimolazione Visiva</b>
+      <span>modulazione — versione web 2.3.4 ©copyright 2026 Rossano.Fracassa@gmail.com </span>
+    </div>
+    <div id="clock">--/--/---- --:--:--</div>
+    <button class="toggle" id="training-toggle" title="Modalità training: nessun salvataggio">Training</button>
+    <button class="iconbtn" id="btn-risultati" title="Risultati sessioni">
+      <svg viewBox="0 0 24 24"><path d="M4 19V5a1 1 0 0 1 1-1h10l5 5v10a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1Z"/><path d="M14 4v5h5"/><path d="M8 13h8M8 16h5"/></svg>
+    </button>
+    <button class="iconbtn" id="btn-parametri" type="button" title="Parametri" onclick="return AVDESK_apriParametri();">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.6-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H9a1.7 1.7 0 0 0 1-1.6V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V9a1.7 1.7 0 0 0 1.6 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.6 1Z"/></svg>
+    </button>
+  </header>
+
+  <div id="stage-wrap">
+    <div id="stage">
+      <div class="cross" id="cross"></div>
+    </div>
+
+    <div id="countdown"></div>
+
+    <div id="copyright-label">
+      <span class="cl-text">
+        AVDESK · Stimolazione Visiva<br>
+        © 2026 · Tutti i diritti riservati
+      </span>
+      <button type="button" id="btn-info" class="info-btn" title="Informazioni e contatti" aria-label="Informazioni e contatti">i</button>
+    </div>
+
+    <div id="idle-panel">
+      <div class="target-preview">
+        <span>bersaglio:</span>
+        <span class="swatch" id="target-swatch" style="color:#ff0000;background:#ff0000;"></span>
+        <span id="target-name">rosso</span>
+        <span class="mode-badge" id="mode-badge">colore random</span>
+      </div>
+      <button id="start-btn">Avvia sessione</button>
+      <p>Tocca lo schermo (o Barra Spazio)allo  stimolo LED colore bersaglio.              Impostazione sessione (pulsante parametri alto dx) </p>
+    </div>
+
+    <div id="info-bar">
+      <div id="info-text"></div>
+      <button id="stop-btn">Termina (Esc)</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- ============ MODAL PARAMETRI ============ -->
+<div class="modal-overlay" id="modal-parametri">
+  <div class="modal">
+    <header class="modal-head">
+      <h2>Parametri sessione</h2>
+      <button class="close-x" data-close>&times;</button>
+    </header>
+    <div class="modal-body">
+
+      <div style="padding:9px 10px;border:1px solid var(--border);border-radius:8px;background:var(--panel-2);font-size:12px;color:var(--text-dim);">
+        I parametri modificati qui vengono applicati alla <b style="color:var(--text)">sessione corrente</b>.
+        Il salvataggio/caricamento da file <b style="color:var(--text)">.ini</b> sarà aggiunto successivamente.
+      </div>
+
+      <fieldset>
+        <legend>Temporizzazione</legend>
+        <div class="row">
+          <div class="field">
+            <label>Intervallo tra stimoli (ms)</label>
+            <input type="number" id="p-timeLed" min="200" step="100">
+          </div>
+          <div class="field">
+            <label>Timeout reazione (ms)</label>
+            <input type="number" id="p-timeoutBarra" min="200" step="100">
+          </div>
+        </div>
+        <div class="field">
+          <label>Numero stimoli per sessione <span id="p-numStimoli-hint" style="color:var(--text-dim)"></span></label>
+          <input type="number" id="p-numStimoli" min="1" step="1">
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Sorgente stimoli</legend>
+        <label class="checkline"><input type="checkbox" id="p-randomLed"> Colore/posizione casuale (random led color)</label>
+        <div class="field" id="p-piano-wrap" style="margin-top:10px;">
+          <label>Piano di modulazione attivo (usato quando il colore NON è casuale)</label>
+          <div class="inline-select-row">
+            <div class="field"><select id="p-piano-select"></select></div>
+            <button class="btn small" id="p-piano-manage" type="button">Gestisci piani…</button>
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset id="p-fieldset-posizione">
+        <legend>Distribuzione posizione sullo schermo (modo random)</legend>
+        <div class="pctrow"><span style="width:56px">Sinistra</span><input type="range" id="p-percSx" min="0" max="100"><span class="val" id="p-percSx-val"></span></div>
+        <div class="pctrow"><span style="width:56px">Centro</span><input type="range" id="p-percCentro" min="0" max="100"><span class="val" id="p-percCentro-val"></span></div>
+        <div class="pctrow"><span style="width:56px">Destra</span><span class="val" id="p-percDx-val" style="margin-left:auto;color:var(--text-dim)"></span></div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Colore bersaglio</legend>
+        <div class="colorpick" id="p-target-colors"></div>
+      </fieldset>
+
+      <fieldset id="p-fieldset-profilo">
+        <legend>Profilo colori stimolo (% di comparsa, modo random)</legend>
+        <div class="inline-select-row" style="margin-bottom:10px;">
+          <div class="field">
+            <label>Profilo salvato</label>
+            <select id="p-profile-select"><option value="">— nessuno (modifica libera) —</option></select>
+          </div>
+          <button class="btn small" id="p-profile-save" type="button">Salva come…</button>
+          <button class="btn small danger" id="p-profile-del" type="button">Elimina</button>
+        </div>
+        <div id="p-color-profile" style="display:flex; flex-direction:column; gap:7px;"></div>
+        <div style="font-size:11.5px;color:var(--text-dim);margin-top:6px;" id="p-profile-sum"></div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Aspetto e feedback</legend>
+        <div class="row">
+          <div class="field">
+            <label>Raggio LED (px)</label>
+            <input type="number" id="p-raggio" min="6" max="120" step="2">
+          </div>
+          <div class="field">
+            <label>Suono stimolo</label>
+            <select id="p-suono">
+              <option value="nullo">Nullo</option>
+              <option value="informativo">Informativo</option>
+              <option value="avviso">Avviso</option>
+              <option value="errore">Errore</option>
+              <option value="domanda">Domanda</option>
+              <option value="default">Default</option>
+              <option value="beep">Beep</option>
+            </select>
+          </div>
+        </div>
+        <label class="checkline"><input type="checkbox" id="p-autosave"> Salva automaticamente i risultati a fine sessione</label>
+        <label class="checkline"><input type="checkbox" id="p-trace"> Log dettagliato per stimolo (trigger trace)</label>
+      </fieldset>
+
+      <div class="btnrow" style="padding:0; border-top:none;">
+        <button class="btn" id="p-reset-default" type="button">Ripristina parametri default</button>
+      </div>
+
+    </div>
+    <div class="btnrow">
+      <button class="btn" data-close>Annulla</button>
+      <button class="btn" type="button" onclick="return AVDESK_esportaINI();">Esporta .INI</button>
+      <button class="btn" type="button" onclick="return AVDESK_importaINI();">Importa .INI</button>
+      <input id="avdesk-ini-file" type="file" accept=".ini,text/plain" style="display:none">
+      <button class="btn primary" id="p-save" type="button" onclick="return AVDESK_salvaParametri();">Salva parametri</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MODAL GESTIONE PIANI DI MODULAZIONE ============ -->
+<div class="modal-overlay" id="modal-piani">
+  <div class="modal wide">
+    <header class="modal-head">
+      <h2>Piani di modulazione (sequenze pre-programmate)</h2>
+      <button class="close-x" data-close>&times;</button>
+    </header>
+    <div class="modal-body">
+      <p style="margin:0;color:var(--text-dim);font-size:12.5px;">
+        Un piano è una sequenza fissa di stimoli (posizione + colore) che sostituisce la generazione casuale.
+        Scegli un colore dalla tavolozza, poi tocca il rettangolo nero nel punto in cui vuoi che compaia lo stimolo: verrà aggiunto in coda alla sequenza.
+      </p>
+      <div class="two-col">
+        <div>
+          <div class="field">
+            <label>Piani salvati</label>
+            <div id="plan-list"></div>
+          </div>
+          <button class="btn small" id="plan-new" type="button">+ Nuovo piano</button>
+        </div>
+        <div>
+          <div class="field">
+            <label>Nome piano</label>
+            <input type="text" id="plan-name" placeholder="es. Campo visivo dx — mappatura iniziale">
+          </div>
+          <div class="field" style="margin-top:8px;">
+            <label>Colore da registrare</label>
+            <div class="rec-palette" id="plan-palette"></div>
+          </div>
+          <div class="field" style="margin-top:8px;">
+            <label>Anteprima schermo — tocca per aggiungere uno stimolo</label>
+            <div id="plan-preview"><div class="pcross"></div></div>
+          </div>
+          <div class="field" style="margin-top:8px;">
+            <label>Sequenza (<span id="plan-count">0</span> stimoli)</label>
+            <div class="points-list" id="plan-points"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="btnrow">
+      <button class="btn danger" id="plan-delete" type="button">Elimina piano</button>
+      <button class="btn primary" id="plan-save" type="button">Salva piano</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MODAL RISULTATI ============ -->
+<div class="modal-overlay" id="modal-risultati">
+  <div class="modal">
+    <header class="modal-head">
+      <h2>Risultati sessioni</h2>
+      <button class="close-x" data-close>&times;</button>
+    </header>
+    <div class="modal-body">
+      <div id="risultati-body"></div>
+    </div>
+    <div class="btnrow">
+      <button class="btn danger" id="r-clear">Cancella cronologia</button>
+      <button class="btn" id="r-export-trace" type="button">Esporta traccia stimoli</button>
+      <button class="btn primary" id="r-export">Esporta CSV</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MODAL RISULTATO SESSIONE (fine) ============ -->
+<div class="modal-overlay" id="modal-esito">
+  <div class="modal">
+    <header class="modal-head">
+      <h2>Sessione conclusa</h2>
+      <button class="close-x" data-close>&times;</button>
+    </header>
+    <div class="modal-body">
+      <table id="esito-table"></table>
+    </div>
+    <div class="btnrow">
+      <button class="btn primary" data-close>Chiudi</button>
+    </div>
+  </div>
+</div>
+
+
+
+
+  <script src="app.js"></script>
+</body>
+</html>
