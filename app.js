@@ -1337,6 +1337,21 @@ function AVDESK_applicaINI(data){
     scaricaFile(nome, costruisciTracciaCSV(conTraccia), "text/csv;charset=utf-8;");
   }
 
+  /* Grafico traccia stimoli (mappa spaziale X-Y, come Prospetto_Grafico_AVDesk.xlsm) */
+  function mostraGraficoTraccia(s){
+    if(!s || !s.trace || !s.trace.length){
+      alert("Nessuna traccia disponibile. Attiva 'Log dettagliato per stimolo' nei parametri ed esegui una nuova sessione (non in modalità Training, con salvataggio automatico attivo).");
+      return;
+    }
+    if(!window.AvdeskTracciaGrafico){ alert("Modulo grafico non caricato (traccia_grafico.js)."); return; }
+    var righe = s.trace.map(function(t){
+      return { x: t.x*100, y: t.y*100, categoria: ESITO_TRACE[t.e] || t.e };
+    });
+    window.AvdeskTracciaGrafico.apri(righe, {
+      titolo: "Traccia stimoli · sessione del " + fmtDataOra(s.data, true) + " · " + righe.length + " stimoli"
+    });
+  }
+
   function renderTraccia(idx){
     var s = SESSIONS[idx];
     if(!s || !s.trace) return;
@@ -1357,6 +1372,7 @@ function AVDESK_applicaINI(data){
     body.innerHTML =
       '<div style="display:flex;gap:8px;margin-bottom:10px;">'+
         '<button class="btn small" id="tr-back" type="button">← Sessioni</button>'+
+        '<button class="btn small primary" id="tr-graph" type="button">Grafico traccia</button>'+
         '<button class="btn small primary" id="tr-export" type="button">Esporta traccia CSV</button>'+
       '</div>'+
       '<div style="font-size:12px;color:var(--text-dim);margin-bottom:8px;">Sessione del '+fmtDataOra(s.data, true)+
@@ -1364,6 +1380,7 @@ function AVDESK_applicaINI(data){
       '<div style="overflow-x:auto;"><table><thead><tr><th>#</th><th>t (ms)</th><th>Colore</th><th>Fascia</th><th>Posizione</th><th>Bersaglio</th><th>Esito</th><th>Reazione</th></tr></thead>'+
       "<tbody>"+rows+"</tbody></table></div>";
     $("tr-back").addEventListener("click", renderRisultati);
+    $("tr-graph").addEventListener("click", function(){ mostraGraficoTraccia(s); });
     $("tr-export").addEventListener("click", function(){
       esportaTraccia([s], "avdesk_traccia_sessione.csv");
     });
@@ -1386,6 +1403,7 @@ function AVDESK_applicaINI(data){
         "<td>"+s.falsoPositivo+"</td>"+
         "<td>"+(s.tempoMedioReazioneMs!==null?s.tempoMedioReazioneMs+"ms":"—")+"</td>"+
         '<td class="sess-actions">'+
+          ((s.trace && s.trace.length) ? '<button data-graf="'+idx+'">grafico</button>' : '')+
           ((s.trace && s.trace.length) ? '<button data-trace="'+idx+'">traccia ('+s.trace.length+')</button>' : '')+
           '<button data-del="'+idx+'">elimina</button></td>'+
       "</tr>";
@@ -1393,6 +1411,9 @@ function AVDESK_applicaINI(data){
     body.innerHTML =
       "<table><thead><tr><th>Data</th><th>Individuati</th><th>Persi</th><th>Falsi pos.</th><th>T. medio</th><th></th></tr></thead>"+
       "<tbody>"+rows+"</tbody></table>";
+    body.querySelectorAll("[data-graf]").forEach(function(btn){
+      btn.addEventListener("click", function(){ mostraGraficoTraccia(SESSIONS[Number(btn.dataset.graf)]); });
+    });
     body.querySelectorAll("[data-trace]").forEach(function(btn){
       btn.addEventListener("click", function(){ renderTraccia(Number(btn.dataset.trace)); });
     });
@@ -1417,6 +1438,14 @@ function AVDESK_applicaINI(data){
       saveJSON(LS_SESSIONS, SESSIONS);
       renderRisultati();
     }
+  });
+
+  $("r-graph-trace").addEventListener("click", function(){
+    var ultima = null;
+    SESSIONS.forEach(function(s){
+      if(s.trace && s.trace.length && (!ultima || new Date(s.data) > new Date(ultima.data))) ultima = s;
+    });
+    mostraGraficoTraccia(ultima);
   });
 
   $("r-export-trace").addEventListener("click", function(){
