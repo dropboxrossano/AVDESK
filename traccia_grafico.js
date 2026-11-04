@@ -17,7 +17,7 @@
 
   // Serie e stile identici al grafico del .xlsm
   var SERIE = [
-    { key: 'beccato',        label: 'Beccato (Target Intercettato)', simbolo: 'cerchio',   size: 7,  fill: '#2E8B57', line: '#228B22' },
+    { key: 'beccato',        label: 'Stimolo (Target Intercettato)', simbolo: 'cerchio',   size: 7,  fill: '#2E8B57', line: '#228B22' },
     { key: 'distrattori',    label: 'Distrattori (Non Target)',      simbolo: 'cerchio',   size: 4,  fill: '#C8C8C8', line: '#A0A0A0' },
     { key: 'falso positivo', label: 'Falso Positivo',                simbolo: 'triangolo', size: 9,  fill: '#FF8C00', line: '#FF4500' },
     { key: 'timeout',        label: 'Timeout (Target Mancato)',      simbolo: 'x',         size: 10, fill: null,      line: '#DC143C' }
