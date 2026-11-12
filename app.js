@@ -1475,8 +1475,8 @@ function AVDESK_applicaINI(data){
     nome:      "Rossano Fracassa",           
     email:     "rossano.fracassa@gmail.com",
     mobile:    "+39 331 2007325",         
-    procedura: "AVDESK · Stimolazione Visiva — versione web 2.1.0 " +
-               "Per informazioni sulla procedura, supporto o richieste di utilizzo, " +
+    procedura: "AVDESK · Stimolazione Visiva — versione web 2.6.1 GRAPHICS          " +
+               "               Per informazioni sulla procedura, supporto o richieste di utilizzo, " +
                "contattare l'autore ai recapiti indicati."
   };
 
