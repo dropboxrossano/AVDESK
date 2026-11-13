@@ -35,7 +35,7 @@
   <header>
     <div class="brand">
       <b>AVDESK · Stimolazione Visiva</b>
-      <span>modulazione — versione web 2.6.1 GRAPHICS ©copyright 2026 Rossano Fracassa </span>
+      <span>modulazione — versione web 2.7.0 GRAPHICS ©copyright 2026 Rossano Fracassa </span>
     </div>
     <div id="clock">--/--/---- --:--:--</div>
     <button class="toggle" id="training-toggle" title="Modalità training: nessun salvataggio">Training</button>
@@ -81,6 +81,29 @@
 
 </div>
 
+<!-- ============ MODAL E-MAIL ACCOUNT (richiesta all'avvio se mancante) ============ -->
+<div class="modal-overlay" id="modal-email" data-required="1">
+  <div class="modal">
+    <header class="modal-head">
+      <h2>E-mail account</h2>
+    </header>
+    <div class="modal-body">
+      <p style="margin:0;color:var(--text-dim);font-size:13px;">
+        Per utilizzare AVDESK inserisci l'indirizzo e-mail del tuo account.
+        Potrai modificarlo in seguito da <b style="color:var(--text)">Parametri</b>.
+      </p>
+      <div class="field">
+        <label for="email-start">E-mail account</label>
+        <input type="email" id="email-start" placeholder="nome@esempio.it" autocomplete="email" autocapitalize="off" spellcheck="false" inputmode="email" style="user-select:text">
+        <div id="email-start-err" style="color:#ff9c9c;font-size:12px;min-height:16px;"></div>
+      </div>
+    </div>
+    <div class="btnrow">
+      <button class="btn primary" id="email-start-ok" type="button">Conferma</button>
+    </div>
+  </div>
+</div>
+
 <!-- ============ MODAL PARAMETRI ============ -->
 <div class="modal-overlay" id="modal-parametri">
   <div class="modal">
@@ -94,6 +117,14 @@
         I parametri modificati qui vengono applicati alla <b style="color:var(--text)">sessione corrente</b>.
         Il salvataggio/caricamento da file <b style="color:var(--text)">.ini</b> sarà aggiunto successivamente.
       </div>
+
+      <fieldset>
+        <legend>Account</legend>
+        <div class="field">
+          <label for="p-email">E-mail account</label>
+          <input type="email" id="p-email" placeholder="nome@esempio.it" autocomplete="email" autocapitalize="off" spellcheck="false" inputmode="email" style="user-select:text">
+        </div>
+      </fieldset>
 
       <fieldset>
         <legend>Temporizzazione</legend>

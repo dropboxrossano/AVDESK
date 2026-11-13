@@ -21,6 +21,7 @@ function AVDESK_apriParametri(){
     var e=document.getElementById("p-autosave"); if(e) e.checked=!!d.autosave;
     e=document.getElementById("p-trace"); if(e) e.checked=!!d.trace;
     e=document.getElementById("p-randomLed"); if(e) e.checked=!!d.randomLed;
+    set("p-email", d.email||"");
   }catch(err){}
   /* Popola combo piani/profili, colori bersaglio e sliders dal modulo principale
      (prima non veniva mai chiamato: il combo dei piani restava vuoto). */
@@ -40,6 +41,19 @@ function AVDESK_salvaParametri(){
     var cfg={};
     var raw=localStorage.getItem("avdesk_config_v2");
     if(raw){ try{ cfg=JSON.parse(raw)||{}; }catch(e){ cfg={}; } }
+
+    /* E-mail account: facoltativa, ma se presente deve avere un formato valido. */
+    var emailEl=get("p-email");
+    if(emailEl){
+      var mail=String(emailEl.value||"").trim().toLowerCase();
+      if(mail && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(mail)){
+        alert("L'indirizzo e-mail non è valido. Controllalo e riprova.");
+        try{ emailEl.focus(); }catch(e){}
+        return false;
+      }
+      cfg.email=mail;
+      emailEl.value=mail;
+    }
 
     cfg.timeLed=Math.max(200,num("p-timeLed",3000));
     cfg.timeoutBarra=Math.max(100,num("p-timeoutBarra",2000));
@@ -131,6 +145,7 @@ function AVDESK_esportaINI(){
       "",
       "[AVDESK]",
       "version=1",
+      "email="+String(val("p-email","")).trim().replace(/[\r\n]/g," "),
       "timeLed="+val("p-timeLed",3000),
       "timeoutBarra="+val("p-timeoutBarra",2000),
       "numStimoli="+val("p-numStimoli",100),
@@ -251,6 +266,7 @@ function AVDESK_applicaINI(data){
     return min!==undefined ? Math.max(min,n) : n;
   };
 
+  if(d.email!==undefined && String(d.email).trim()!=="") set("p-email",String(d.email).trim());
   set("p-timeLed",num(d.timeLed,3000,200));
   set("p-timeoutBarra",num(d.timeoutBarra,2000,100));
   set("p-numStimoli",Math.max(1,Math.floor(num(d.numStimoli,100,1))));
@@ -308,6 +324,7 @@ function AVDESK_applicaINI(data){
 
   /* Valori di default — equivalente cmdDefault_Click in FormParametri.frm */
   var DEFAULT_CONFIG = {
+    email: "",
     timeLed: 3000,
     timeoutBarra: 2000,
     numStimoli: 100,
@@ -794,7 +811,7 @@ function AVDESK_applicaINI(data){
     });
   });
   document.querySelectorAll(".modal-overlay").forEach(function(ov){
-    ov.addEventListener("click", function(e){ if(e.target === ov) ov.classList.remove("open"); });
+    ov.addEventListener("click", function(e){ if(e.target === ov && !ov.dataset.required) ov.classList.remove("open"); });
   });
 
   /* =========================================================
@@ -896,6 +913,7 @@ function AVDESK_applicaINI(data){
   }
 
   function fillParametriForm(){
+    if($("p-email")) $("p-email").value = CONFIG.email || "";
     $("p-timeLed").value = CONFIG.timeLed;
     $("p-timeoutBarra").value = CONFIG.timeoutBarra;
     $("p-numStimoli").value = CONFIG.numStimoli;
@@ -970,7 +988,9 @@ function AVDESK_applicaINI(data){
   var INI_DEFAULT_URL = "AVDESK_parametri_STIMOLAZIONI.ini";
 
   function ripristinaDaDefaultInterni(){
+    var emailCorrente = ($("p-email") && $("p-email").value) || CONFIG.email || "";
     CONFIG = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
+    CONFIG.email = emailCorrente;   // l'account non fa parte dei default
     fillParametriForm();
   }
 
@@ -1230,7 +1250,10 @@ function AVDESK_applicaINI(data){
      interni e riprova al prossimo avvio.
      ========================================================= */
   function primoAvvioDaINI(){
-    try{ if(localStorage.getItem(LS_CONFIG) !== null) return; }catch(e){ return; }
+    try{
+      var cInit = loadJSON(LS_CONFIG, null);
+      if(cInit && cInit.timeLed !== undefined){ chiediEmailSeMancante(); return; }
+    }catch(e){ return; }
 
     fetch(INI_DEFAULT_URL + "?t=" + Date.now(), { cache: "no-store" })
       .then(function(r){
@@ -1239,7 +1262,8 @@ function AVDESK_applicaINI(data){
       })
       .then(function(text){
         // nel frattempo l'utente ha già salvato dei parametri: non sovrascrivere
-        if(localStorage.getItem(LS_CONFIG) !== null) return;
+        var cEsist = loadJSON(LS_CONFIG, null);
+        if(cEsist && cEsist.timeLed !== undefined) return;
 
         var ini = AVDESK_parseINI(text);
         var d = ini.AVDESK || {}, p = ini.PROFILE || {};
@@ -1257,6 +1281,8 @@ function AVDESK_applicaINI(data){
         };
 
         var cfg = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
+        if(cEsist && cEsist.email) cfg.email = cEsist.email;   // conserva l'e-mail già inserita
+        if(d.email) cfg.email = String(d.email).trim().toLowerCase();
         cfg.timeLed      = num(d.timeLed, cfg.timeLed, 200);
         cfg.timeoutBarra = num(d.timeoutBarra, cfg.timeoutBarra, 100);
         cfg.numStimoli   = Math.max(1, Math.floor(num(d.numStimoli, cfg.numStimoli, 1)));
@@ -1291,7 +1317,45 @@ function AVDESK_applicaINI(data){
       })
       .catch(function(err){
         console.warn("AVDESK: primo avvio, default da INI non disponibili ("+err.message+"). Uso i default interni.");
-      });
+      })
+      .then(function(){ chiediEmailSeMancante(); });
+  }
+
+  /* =========================================================
+     E-MAIL ACCOUNT — all'avvio, se non presente nei parametri,
+     ne viene richiesto l'inserimento (finestra non chiudibile).
+     ========================================================= */
+  var EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+  function chiediEmailSeMancante(){
+    try{
+      CONFIG = loadConfig();
+      if(CONFIG.email && EMAIL_RE.test(CONFIG.email)) return;
+      var inp = $("email-start"), err = $("email-start-err"), ok = $("email-start-ok");
+      if(!inp || !ok) return;
+      inp.value = CONFIG.email || "";
+      err.textContent = "";
+      openModal("modal-email");
+      setTimeout(function(){ try{ inp.focus(); }catch(e){} }, 50);
+
+      function conferma(){
+        var mail = String(inp.value || "").trim().toLowerCase();
+        if(!EMAIL_RE.test(mail)){
+          err.textContent = "Inserisci un indirizzo e-mail valido.";
+          return;
+        }
+        var raw = loadJSON(LS_CONFIG, null) || {};
+        raw.email = mail;
+        saveConfig(raw);
+        CONFIG = loadConfig();
+        closeModal("modal-email");
+        refreshIdlePanel();
+      }
+      ok.onclick = conferma;
+      inp.onkeydown = function(e){
+        e.stopPropagation();   // evita i tasti rapidi dell'app (Spazio/Esc) mentre si digita
+        if(e.key === "Enter"){ e.preventDefault(); conferma(); }
+      };
+    }catch(e){ console.error("AVDESK e-mail all'avvio:", e); }
   }
   primoAvvioDaINI();
 
@@ -1475,7 +1539,7 @@ function AVDESK_applicaINI(data){
     nome:      "Rossano Fracassa",           
     email:     "rossano.fracassa@gmail.com",
     mobile:    "+39 331 2007325",         
-    procedura: "AVDESK · Stimolazione Visiva — versione web 2.6.1 GRAPHICS          " +
+    procedura: "AVDESK · Stimolazione Visiva — versione web 2.7.0 GRAPHICS          " +
                "               Per informazioni sulla procedura, supporto o richieste di utilizzo, " +
                "contattare l'autore ai recapiti indicati."
   };
