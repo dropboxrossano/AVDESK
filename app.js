@@ -989,6 +989,16 @@ function AVDESK_applicaINI(data){
      valori interni DEFAULT_CONFIG. */
   var INI_DEFAULT_URL = "AVDESK_parametri_STIMOLAZIONI.ini";
 
+  /* Legge AVDESK_parametri_STIMOLAZIONI.ini dallo stesso percorso web dell'app.
+     Usato sia dal primo avvio sia dal ripristino dei default. */
+  function leggiINIDefault(){
+    return fetch(INI_DEFAULT_URL + "?t=" + Date.now(), { cache: "no-store" })
+      .then(function(r){
+        if(!r.ok) throw new Error("HTTP "+r.status);
+        return r.text();
+      });
+  }
+
   function ripristinaDaDefaultInterni(){
     var emailCorrente = ($("p-email") && $("p-email").value) || CONFIG.email || "";
     CONFIG = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
@@ -1000,15 +1010,12 @@ function AVDESK_applicaINI(data){
     if(!confirm("Ripristinare i parametri di base dal file "+INI_DEFAULT_URL+"?")) return;
     var btn = this, label = btn.textContent;
     btn.disabled = true; btn.textContent = "Caricamento default…";
-    var url = INI_DEFAULT_URL + "?t=" + Date.now();   // evita la cache del browser/CDN
-    fetch(url, { cache: "no-store" })
-      .then(function(r){
-        if(!r.ok) throw new Error("HTTP "+r.status);
-        return r.text();
-      })
+    leggiINIDefault()
       .then(function(text){
         var parsed = AVDESK_parseINI(text);
+        var emailPrima = $("p-email") ? $("p-email").value : "";
         var nPiani = AVDESK_applicaINI(parsed) || 0;
+        if($("p-email")) $("p-email").value = emailPrima;   // l'account non fa parte dei default
         // riallinea CONFIG in memoria al form appena popolato (nessun salvataggio automatico)
         PLANS = loadJSON(LS_PLANS, []);
         refreshPlanSelect();
@@ -1254,23 +1261,31 @@ function AVDESK_applicaINI(data){
   function primoAvvioDaINI(){
     try{
       var cInit = loadJSON(LS_CONFIG, null);
-      if(cInit && cInit.timeLed !== undefined){ chiediEmailSeMancante(); return; }
+      var configPresente = !!(cInit && cInit.timeLed !== undefined);
+      // parametri già salvati E piani già presenti: nulla da importare
+      if(configPresente && PLANS.length > 0){ chiediEmailSeMancante(); return; }
     }catch(e){ return; }
 
-    fetch(INI_DEFAULT_URL + "?t=" + Date.now(), { cache: "no-store" })
-      .then(function(r){
-        if(!r.ok) throw new Error("HTTP "+r.status);
-        return r.text();
-      })
+    leggiINIDefault()
       .then(function(text){
-        // nel frattempo l'utente ha già salvato dei parametri: non sovrascrivere
-        var cEsist = loadJSON(LS_CONFIG, null);
-        if(cEsist && cEsist.timeLed !== undefined) return;
-
         var ini = AVDESK_parseINI(text);
         var d = ini.AVDESK || {}, p = ini.PROFILE || {};
 
-        if(ini.PLANLIST && ini.PLANLIST.length) window.AVDESK_importaPiani(ini.PLANLIST);
+        /* Piani di modulazione ([PLANS] / [PLAN1]..[PLANn]): importati se non ce ne sono ancora,
+           anche quando i parametri risultano già salvati. Un errore qui non blocca i parametri. */
+        if(PLANS.length === 0 && ini.PLANLIST && ini.PLANLIST.length){
+          try{
+            var nImp = window.AVDESK_importaPiani(ini.PLANLIST);
+            PLANS = loadJSON(LS_PLANS, []);
+            console.info("AVDESK: primo avvio — importati "+nImp+" piani di modulazione da "+INI_DEFAULT_URL);
+          }catch(errPiani){
+            console.error("AVDESK: importazione piani da INI non riuscita:", errPiani);
+          }
+        }
+
+        // parametri già salvati dall'utente: non sovrascrivere
+        var cEsist = loadJSON(LS_CONFIG, null);
+        if(cEsist && cEsist.timeLed !== undefined) return;
 
         var num = function(v, def, min){
           var n = Number(v);
@@ -1284,7 +1299,6 @@ function AVDESK_applicaINI(data){
 
         var cfg = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
         if(cEsist && cEsist.email) cfg.email = cEsist.email;   // conserva l'e-mail già inserita
-        if(d.email) cfg.email = String(d.email).trim().toLowerCase();
         cfg.timeLed      = num(d.timeLed, cfg.timeLed, 200);
         cfg.timeoutBarra = num(d.timeoutBarra, cfg.timeoutBarra, 100);
         cfg.numStimoli   = Math.max(1, Math.floor(num(d.numStimoli, cfg.numStimoli, 1)));
@@ -1639,7 +1653,7 @@ function AVDESK_applicaINI(data){
     nome:      "Rossano Fracassa",           
     email:     "rossano.fracassa@gmail.com",
     mobile:    "+39 331 2007325",         
-    procedura: "AVDESK · Stimolazione Visiva — versione web 2.8.0 GRAPHICS          " +
+    procedura: "AVDESK · Stimolazione Visiva — versione web 2.9.0 GRAPHICS          " +
                "               Per informazioni sulla procedura, supporto o richieste di utilizzo, " +
                "contattare l'autore ai recapiti indicati."
   };
