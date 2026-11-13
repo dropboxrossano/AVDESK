@@ -108,6 +108,8 @@ function AVDESK_salvaParametri(){
     /* Aggiorna anche CONFIG, se il codice principale è attivo. */
     try{ if(typeof window.AVDESK_aggiornaConfig==="function") window.AVDESK_aggiornaConfig(cfg); }catch(e){}
 
+    try{ if(cfg.email && typeof window.AVDESK_registraEmail==="function") window.AVDESK_registraEmail(cfg.email); }catch(e){}
+
     var btn=get("p-save");
     if(btn){
       var old=btn.textContent;
@@ -1325,11 +1327,94 @@ function AVDESK_applicaINI(data){
      E-MAIL ACCOUNT — all'avvio, se non presente nei parametri,
      ne viene richiesto l'inserimento (finestra non chiudibile).
      ========================================================= */
+  /* =========================================================
+     SUPABASE — registrazione e-mail account (funzione avdesk_registra_utente)
+     Compilare le due costanti con Project URL e chiave anon/publishable.
+     Finché sono vuote l'app funziona normalmente senza registrare nulla.
+     ========================================================= */
+  var SUPABASE_URL      = "https://cvkqssoswkfpvtwciydb.supabase.co";
+  var SUPABASE_ANON_KEY = "sb_publishable_fTJN3fQr0mgGF8nBdHbZ-g_BsloGqZR";   // solo chiave publishable (mai la secret)
+  var SUPABASE_APP      = "AVDESK";
+  var LS_EMAIL_REG      = "avdesk_email_registrata_v1";   // ultima e-mail registrata con successo
+
+  function supabaseConfigurato(){
+    return SUPABASE_URL.indexOf("https://") === 0 && SUPABASE_ANON_KEY.length > 20;
+  }
+
+  /* Chiama la funzione RPC. Rifiuta con err.rifiuto=true se il server risponde 4xx
+     (e-mail/applicazione non ammesse), altrimenti l'errore è di rete/temporaneo. */
+  function supabaseRegistra(email){
+    var ctrl = (typeof AbortController !== "undefined") ? new AbortController() : null;
+    var to = setTimeout(function(){ if(ctrl) ctrl.abort(); }, 10000);
+    var headers = { "Content-Type": "application/json", "apikey": SUPABASE_ANON_KEY };
+    if(SUPABASE_ANON_KEY.indexOf("sb_") !== 0){   // vecchie chiavi anon (JWT)
+      headers["Authorization"] = "Bearer " + SUPABASE_ANON_KEY;
+    }
+    return fetch(SUPABASE_URL.replace(/\/+$/, "") + "/rest/v1/rpc/avdesk_registra_utente", {
+      method: "POST",
+      headers: headers,
+      body: JSON.stringify({ p_email: email }),   // la funzione sul server ha il solo parametro p_email (applicazione fissa AVDESK)
+      signal: ctrl ? ctrl.signal : undefined
+    }).then(function(r){
+      return r.json().catch(function(){ return null; }).then(function(body){
+        if(!r.ok){
+          var e = new Error((body && (body.message || body.hint)) || ("HTTP " + r.status));
+          e.rifiuto = (r.status >= 400 && r.status < 500);
+          throw e;
+        }
+        var row = Array.isArray(body) ? body[0] : body;
+        if(!row){ var e2 = new Error("risposta vuota dal server"); e2.rifiuto = false; throw e2; }
+        return row;
+      });
+    }).then(function(row){ clearTimeout(to); return row; },
+            function(err){ clearTimeout(to); throw err; });
+  }
+
+  /* Esito: { stato: "ok" | "offline" | "rifiutata" | "nonConfigurato", row?, msg? } */
+  function registraEmailSupabase(email){
+    email = String(email || "").trim().toLowerCase();
+    if(!supabaseConfigurato()){
+      console.warn("AVDESK: Supabase non configurato (SUPABASE_URL / SUPABASE_ANON_KEY vuoti).");
+      return Promise.resolve({ stato: "nonConfigurato" });
+    }
+    return supabaseRegistra(email).then(function(row){
+      saveJSON(LS_EMAIL_REG, { email: email, sessioni: row.o_sessioni, stato: row.o_stato, ts: Date.now() });
+      return { stato: "ok", row: row };
+    }).catch(function(err){
+      var msg = (err && err.name === "AbortError") ? "tempo scaduto" : (err && err.message) || "errore";
+      console.warn("AVDESK: registrazione e-mail non riuscita:", msg);
+      return { stato: (err && err.rifiuto) ? "rifiutata" : "offline", msg: msg };
+    });
+  }
+
+  function emailGiaRegistrata(email){
+    var r = loadJSON(LS_EMAIL_REG, null);
+    return !!(r && r.email === String(email || "").trim().toLowerCase());
+  }
+  function riprovaRegistrazioneEmail(){
+    if(CONFIG.email && !emailGiaRegistrata(CONFIG.email)) registraEmailSupabase(CONFIG.email);
+  }
+
+  /* Usata da "Salva parametri" quando l'e-mail viene corretta. */
+  window.AVDESK_registraEmail = function(email){
+    if(!email || emailGiaRegistrata(email)) return;
+    registraEmailSupabase(email).then(function(res){
+      if(res.stato === "rifiutata"){
+        alert("E-mail salvata, ma la registrazione sul server è stata rifiutata: " + res.msg);
+      } else if(res.stato === "offline"){
+        alert("E-mail salvata. Server non raggiungibile: la registrazione verrà ritentata al prossimo avvio.");
+      }
+    });
+  };
+
   var EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
   function chiediEmailSeMancante(){
     try{
       CONFIG = loadConfig();
-      if(CONFIG.email && EMAIL_RE.test(CONFIG.email)) return;
+      if(CONFIG.email && EMAIL_RE.test(CONFIG.email)){
+        riprovaRegistrazioneEmail();   // e-mail presente: registrala se non lo è ancora
+        return;
+      }
       var inp = $("email-start"), err = $("email-start-err"), ok = $("email-start-ok");
       if(!inp || !ok) return;
       inp.value = CONFIG.email || "";
@@ -1343,12 +1428,27 @@ function AVDESK_applicaINI(data){
           err.textContent = "Inserisci un indirizzo e-mail valido.";
           return;
         }
-        var raw = loadJSON(LS_CONFIG, null) || {};
-        raw.email = mail;
-        saveConfig(raw);
-        CONFIG = loadConfig();
-        closeModal("modal-email");
-        refreshIdlePanel();
+        if(ok.disabled) return;
+        var etichetta = ok.textContent;
+        ok.disabled = true; ok.textContent = "Registrazione…";
+        err.textContent = "";
+        registraEmailSupabase(mail).then(function(res){
+          ok.disabled = false; ok.textContent = etichetta;
+          if(res.stato === "rifiutata"){
+            err.textContent = "Registrazione non riuscita: " + res.msg;
+            return;
+          }
+          // ok / offline / nonConfigurato: l'e-mail viene salvata; se non registrata si riprova al prossimo avvio
+          var raw = loadJSON(LS_CONFIG, null) || {};
+          raw.email = mail;
+          saveConfig(raw);
+          CONFIG = loadConfig();
+          closeModal("modal-email");
+          refreshIdlePanel();
+          if(res.stato === "offline"){
+            alert("E-mail salvata. Server non raggiungibile: la registrazione verrà ritentata al prossimo avvio.");
+          }
+        });
       }
       ok.onclick = conferma;
       inp.onkeydown = function(e){
@@ -1539,7 +1639,7 @@ function AVDESK_applicaINI(data){
     nome:      "Rossano Fracassa",           
     email:     "rossano.fracassa@gmail.com",
     mobile:    "+39 331 2007325",         
-    procedura: "AVDESK · Stimolazione Visiva — versione web 2.7.0 GRAPHICS          " +
+    procedura: "AVDESK · Stimolazione Visiva — versione web 2.8.0 GRAPHICS          " +
                "               Per informazioni sulla procedura, supporto o richieste di utilizzo, " +
                "contattare l'autore ai recapiti indicati."
   };
