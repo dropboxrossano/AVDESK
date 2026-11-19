@@ -784,7 +784,9 @@ function AVDESK_applicaINI(data){
   /* =========================================================
      ESITO SESSIONE — modal finale
      ========================================================= */
+  var ultimoEsitoRec = null;   /* sessione appena conclusa, per il grafico traccia */
   function mostraEsitoSessione(rec){
+    ultimoEsitoRec = rec;
     var rows = [
       ["Modalità", rec.modo === "random" ? "colore random" : "piano di modulazione"],
       ["Stimoli totali", rec.stimoli],
@@ -1618,6 +1620,10 @@ function AVDESK_applicaINI(data){
     }
   });
 
+  $("esito-graph-trace").addEventListener("click", function(){
+    mostraGraficoTraccia(ultimoEsitoRec);
+  });
+
   $("r-graph-trace").addEventListener("click", function(){
     var ultima = null;
     SESSIONS.forEach(function(s){
@@ -1653,7 +1659,7 @@ function AVDESK_applicaINI(data){
     nome:      "Rossano Fracassa",           
     email:     "rossano.fracassa@gmail.com",
     mobile:    "+39 331 2007325",         
-    procedura: "AVDESK · Stimolazione Visiva — versione web 2.9.0 GRAPHICS          " +
+    procedura: "AVDESK · Stimolazione Visiva — versione web 3.0.0 GRAPHICS          " +
                "               Per informazioni sulla procedura, supporto o richieste di utilizzo, " +
                "contattare l'autore ai recapiti indicati."
   };
